@@ -42,6 +42,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private AudioClip[] gravelFootsteps;
 
     ///////////////// INTERNAL STATE ////////////////////
+    private Quaternion baseCameraRotation;
+
+    private GunData currentGunData;
     private float xRotation;
     private float verticalVelocity;
     private float nextStepTime;
@@ -106,24 +109,34 @@ public class PlayerController : MonoBehaviour
     ///////////////// RECOIL ////////////////////
     private void HandleRecoil()
     {
+        if (currentGunData == null ) return; 
+        
+        targetRecoil.y = Mathf.Clamp(targetRecoil.y, -6f, 6f);
+
         currentRecoil = Vector2.Lerp(
             currentRecoil,
             targetRecoil,
-            Time.deltaTime * 25f
+            Time.deltaTime * currentGunData.recoilKickSpeed
         );
 
         targetRecoil = Vector2.Lerp(
             targetRecoil,
             Vector2.zero,
-            Time.deltaTime * 15f
+            Time.deltaTime * currentGunData.recoilReturnSpeed
         );
 
-        virtualCamera.transform.localRotation *=
+        Quaternion recoilRotation =
             Quaternion.Euler(-currentRecoil.x, currentRecoil.y, 0f);
+
+        virtualCamera.transform.localRotation =
+            baseCameraRotation * recoilRotation;
+
     }
 
     public void ApplyRecoil(GunData gunData)
     {
+        currentGunData = gunData;
+
         float vertical = Random.Range(
             gunData.recoilKick.x * 0.8f,
             gunData.recoilKick.x
@@ -221,7 +234,8 @@ public class PlayerController : MonoBehaviour
         xRotation -= lookY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
-        virtualCamera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        baseCameraRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        virtualCamera.transform.localRotation = baseCameraRotation;
         transform.Rotate(Vector3.up * lookX);
     }
 
