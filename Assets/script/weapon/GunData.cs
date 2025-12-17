@@ -17,4 +17,14 @@ public class GunData : ScriptableObject
     [Header("Reload Config")]
     public int magazineSize = 12;
     public float reloadTime = 1.5f;
+
+    [Header("Recoil Config")]
+    [Tooltip("X = Vertical kick, Y = Horizontal kick")]
+    public Vector2 recoilKick = new Vector2(1f, 2f);
+
+    [Tooltip("How fast recoil is applied")]
+    public float recoilKickSpeed = 25f;
+
+    [Tooltip("How fast recoil returns to center")]
+    public float recoilReturnSpeed = 15f;
 }

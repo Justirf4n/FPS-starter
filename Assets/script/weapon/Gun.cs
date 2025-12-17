@@ -21,11 +21,19 @@ public abstract class Gun : MonoBehaviour
         cameraTransform = playerController.virtualCamera.transform;
     }
 
-    protected virtual void Update() { }
+    protected virtual void Update()
+    {
+        if (Input.GetButtonDown("Fire1"))
+            TryShoot();
+
+        if (Input.GetKeyDown(KeyCode.R))
+            TryReload();
+    }
+
 
     protected void TryShoot()
     {
-        if (isReloading) return;
+        if (isReloading || Time.time < nextTimeToFire) return;
 
         if (currentAmmo <= 0)
         {
@@ -33,20 +41,18 @@ public abstract class Gun : MonoBehaviour
             return;
         }
 
-        if (Time.time < nextTimeToFire) return;
-
         nextTimeToFire = Time.time + (1f / gunData.fireRate);
         currentAmmo--;
 
+        playerController.ApplyRecoil(gunData);
         Shoot();
-        Debug.Log($"{gunData.gunName} shot. Ammo left: {currentAmmo}");
+
+        Debug.Log($"{gunData.gunName} fired | Ammo: {currentAmmo}");
     }
 
     protected void TryReload()
     {
-        if (isReloading) return;
-        if (currentAmmo == gunData.magazineSize) return;
-
+        if (isReloading || currentAmmo == gunData.magazineSize) return;
         StartCoroutine(ReloadRoutine());
     }
 

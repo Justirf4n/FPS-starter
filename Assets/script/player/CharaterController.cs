@@ -1,5 +1,6 @@
 using UnityEngine;
 using Cinemachine;
+using System.Security.Cryptography;
 
 public class PlayerController : MonoBehaviour
 {
@@ -22,6 +23,11 @@ public class PlayerController : MonoBehaviour
     [Header("Camera Settings")]
     public CinemachineVirtualCamera virtualCamera;
     [SerializeField] private float mouseSensitivity = 200f;
+
+    ///////////////// RECOIL ////////////////////
+    [Header("Recoil")]
+    private Vector2 currentRecoil;
+    private Vector2 targetRecoil;
 
     ///////////////// FOOTSTEPS ////////////////////
     [Header("Footstep Settings")]
@@ -64,6 +70,7 @@ public class PlayerController : MonoBehaviour
     private void LateUpdate()
     {
         CameraBob();
+        HandleRecoil();
     }
 
     ///////////////// MOVEMENT ////////////////////
@@ -94,6 +101,40 @@ public class PlayerController : MonoBehaviour
         {
             verticalVelocity -= gravity * Time.deltaTime;
         }
+    }
+
+    ///////////////// RECOIL ////////////////////
+    private void HandleRecoil()
+    {
+        currentRecoil = Vector2.Lerp(
+            currentRecoil,
+            targetRecoil,
+            Time.deltaTime * 25f
+        );
+
+        targetRecoil = Vector2.Lerp(
+            targetRecoil,
+            Vector2.zero,
+            Time.deltaTime * 15f
+        );
+
+        virtualCamera.transform.localRotation *=
+            Quaternion.Euler(-currentRecoil.x, currentRecoil.y, 0f);
+    }
+
+    public void ApplyRecoil(GunData gunData)
+    {
+        float vertical = Random.Range(
+            gunData.recoilKick.x * 0.8f,
+            gunData.recoilKick.x
+        );
+
+        float horizontal = Random.Range(
+            -gunData.recoilKick.y,
+            gunData.recoilKick.y
+        );
+
+        targetRecoil += new Vector2(vertical, horizontal);
     }
 
     ///////////////// CAMERA BOB ////////////////////
