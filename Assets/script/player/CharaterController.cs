@@ -1,0 +1,197 @@
+using UnityEngine;
+using Cinemachine;
+
+public class PlayerController : MonoBehaviour
+{
+    private CharacterController controller;
+    private CinemachineBasicMultiChannelPerlin noiseComponent;
+
+    ///////////////// MOVEMENT ////////////////////
+    [Header("Movement Settings")]
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float sprintSpeed = 8f;
+    [SerializeField] private float gravity = 9.5f;
+    [SerializeField] private float jumpHeight = 2f;
+
+    ///////////////// CAMERA BOB ////////////////////
+    [Header("Camera Bob")]
+    [SerializeField] private float bobFrequency = 2f;
+    [SerializeField] private float bobAmplitude = 2f;
+
+    ///////////////// CAMERA ////////////////////
+    [Header("Camera Settings")]
+    public CinemachineVirtualCamera virtualCamera;
+    [SerializeField] private float mouseSensitivity = 200f;
+
+    ///////////////// FOOTSTEPS ////////////////////
+    [Header("Footstep Settings")]
+    [SerializeField] private AudioSource footstepSound;
+    [SerializeField] private LayerMask terrainLayerMask;
+    [SerializeField] private float walkStepInterval = 0.5f;
+    [SerializeField] private float sprintStepInterval = 0.35f;
+
+    [Header("SFX Clips")]
+    [SerializeField] private AudioClip[] groundFootsteps;
+    [SerializeField] private AudioClip[] grassFootsteps;
+    [SerializeField] private AudioClip[] gravelFootsteps;
+
+    ///////////////// INTERNAL STATE ////////////////////
+    private float xRotation;
+    private float verticalVelocity;
+    private float nextStepTime;
+
+    private float moveInput;
+    private float turnInput;
+    private float mouseX;
+    private float mouseY;
+    private bool isSprinting;
+
+    private void Start()
+    {
+        controller = GetComponent<CharacterController>();
+        noiseComponent = virtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    private void Update()
+    {
+        InputManagement();
+        LookAround();
+        Movement();
+        HandleFootsteps();
+    }
+
+    private void LateUpdate()
+    {
+        CameraBob();
+    }
+
+    ///////////////// MOVEMENT ////////////////////
+    private void Movement()
+    {
+        Vector3 move = new Vector3(turnInput, 0f, moveInput);
+        float speed = isSprinting ? sprintSpeed : moveSpeed;
+
+        move = transform.TransformDirection(move) * speed;
+
+        ApplyGravity();
+        move.y = verticalVelocity;
+
+        controller.Move(move * Time.deltaTime);
+    }
+
+    private void ApplyGravity()
+    {
+        if (controller.isGrounded)
+        {
+            if (verticalVelocity < 0f)
+                verticalVelocity = -2f;
+
+            if (Input.GetButtonDown("Jump"))
+                verticalVelocity = Mathf.Sqrt(jumpHeight * 2f * gravity);
+        }
+        else
+        {
+            verticalVelocity -= gravity * Time.deltaTime;
+        }
+    }
+
+    ///////////////// CAMERA BOB ////////////////////
+    private void CameraBob()
+    {
+        if (!controller.isGrounded)
+        {
+            ResetCameraBob();
+            return;
+        }
+
+        Vector3 horizontalVelocity = controller.velocity;
+        horizontalVelocity.y = 0f;
+
+        float speed = horizontalVelocity.magnitude;
+        if (speed < 0.1f)
+        {
+            ResetCameraBob();
+            return;
+        }
+
+        float speed01 = Mathf.InverseLerp(0f, sprintSpeed, speed);
+
+        noiseComponent.m_AmplitudeGain = Mathf.Lerp(0.3f, bobAmplitude, speed01);
+        noiseComponent.m_FrequencyGain = Mathf.Lerp(1.5f, bobFrequency, speed01);
+    }
+
+    private void ResetCameraBob()
+    {
+        noiseComponent.m_AmplitudeGain = 0f;
+        noiseComponent.m_FrequencyGain = 0f;
+    }
+
+    ///////////////// FOOTSTEPS ////////////////////
+    private void HandleFootsteps()
+    {
+        if (!controller.isGrounded) return;
+
+        Vector3 velocity = controller.velocity;
+        velocity.y = 0f;
+
+        float speed = velocity.magnitude;
+        if (speed < 0.2f) return;
+
+        float speed01 = Mathf.InverseLerp(0f, sprintSpeed, speed);
+        float interval = Mathf.Lerp(walkStepInterval, sprintStepInterval, speed01);
+
+        if (Time.time >= nextStepTime)
+        {
+            PlayFootstep();
+            nextStepTime = Time.time + interval;
+        }
+    }
+
+    private void PlayFootstep()
+    {
+        AudioClip[] clips = GetFootstepClips();
+        if (clips.Length == 0) return;
+
+        footstepSound.PlayOneShot(clips[Random.Range(0, clips.Length)]);
+    }
+
+    private AudioClip[] GetFootstepClips()
+    {
+        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 1.5f, terrainLayerMask))
+        {
+            return hit.collider.tag switch
+            {
+                "Grass" => grassFootsteps,
+                "Gravel" => gravelFootsteps,
+                _ => groundFootsteps
+            };
+        }
+
+        return groundFootsteps;
+    }
+
+    ///////////////// CAMERA LOOK ////////////////////
+    private void LookAround()
+    {
+        float lookX = mouseX * mouseSensitivity * Time.deltaTime;
+        float lookY = mouseY * mouseSensitivity * Time.deltaTime;
+
+        xRotation -= lookY;
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+
+        virtualCamera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        transform.Rotate(Vector3.up * lookX);
+    }
+
+    ///////////////// INPUT ////////////////////
+    private void InputManagement()
+    {
+        moveInput = Input.GetAxis("Vertical");
+        turnInput = Input.GetAxis("Horizontal");
+        mouseX = Input.GetAxis("Mouse X");
+        mouseY = Input.GetAxis("Mouse Y");
+
+        isSprinting = Input.GetKey(KeyCode.LeftShift) && moveInput > 0f;
+    }
+}
