@@ -27,4 +27,9 @@ public class GunData : ScriptableObject
 
     [Tooltip("How fast recoil returns to center")]
     public float recoilReturnSpeed = 15f;
+
+    [Header("VFX")]
+    public GameObject bulletTrailPrefab;
+    public float bulletSpeed = 120f;
+
 }

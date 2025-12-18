@@ -6,6 +6,8 @@ public abstract class Gun : MonoBehaviour
     [Header("References")]
     [SerializeField] protected GunData gunData;
 
+    protected Transform gunMuzzle;
+
     protected PlayerController playerController;
     protected Transform cameraTransform;
 
