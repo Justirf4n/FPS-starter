@@ -3,10 +3,14 @@ using UnityEngine;
 
 public abstract class Gun : MonoBehaviour
 {
+    [Header("Hit Effects")]
+    [SerializeField] protected GameObject bulletHolePrefab;
+    [SerializeField] protected GameObject bulletHitParticlePrefab;
+
     [Header("References")]
     [SerializeField] protected GunData gunData;
 
-    protected Transform gunMuzzle;
+    [SerializeField] protected Transform gunMuzzle;
 
     protected PlayerController playerController;
     protected Transform cameraTransform;
@@ -32,6 +36,15 @@ public abstract class Gun : MonoBehaviour
             TryReload();
     }
 
+    protected Vector3 GetSpreadDirection()
+    {
+        float spreadX = Random.Range(-gunData.spreadAngle, gunData.spreadAngle);
+        float spreadY = Random.Range(-gunData.spreadAngle, gunData.spreadAngle);
+
+        Quaternion spreadRotation = Quaternion.Euler(spreadX, spreadY, 0f);
+
+        return spreadRotation * cameraTransform.forward;
+    }
 
     protected void TryShoot()
     {
@@ -69,6 +82,21 @@ public abstract class Gun : MonoBehaviour
         isReloading = false;
 
         Debug.Log($"{gunData.gunName} reloaded");
+    }
+
+    protected void SpawnHitFX(RaycastHit hit)
+    {
+        Vector3 hitPosition = hit.point + hit.normal * 0.01f;
+        Quaternion hitRotation = Quaternion.LookRotation(hit.normal);
+
+        GameObject hole = Instantiate(bulletHolePrefab, hitPosition, hitRotation);
+        GameObject particle = Instantiate(bulletHitParticlePrefab, hitPosition, hitRotation);
+
+        hole.transform.SetParent(hit.collider.transform);
+        particle.transform.SetParent(hit.collider.transform);
+
+        Destroy(hole, 5f);
+        Destroy(particle, 2f);
     }
 
     protected abstract void Shoot();

@@ -1,30 +1,26 @@
-using System.Runtime;
+using System.Collections;
 using UnityEngine;
 
 public class Pistol : Gun
-{
-    protected override void Update()
-    {
-        base.Update();
-
-        if (Input.GetButtonDown("Fire1"))
-            TryShoot();
-
-        if (Input.GetKeyDown(KeyCode.R))
-            TryReload();
-    }
+{   
+    private Vector3 targetPoint;
 
     protected override void Shoot()
     {
-        Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
+        Vector3 shootDirection = GetSpreadDirection();
+        Ray ray = new Ray(cameraTransform.position, shootDirection);
+
+        Vector3 targetPoint;
 
         if (Physics.Raycast(ray, out RaycastHit hit, gunData.shootingRange, gunData.targetLayerMask))
         {
-            Debug.Log($"{gunData.gunName} hit {hit.collider.name}");
+            targetPoint = hit.point;
+            SpawnHitFX(hit);
+            Debug.Log($"{gunData.gunName} hit {targetPoint}");
         }
         else
         {
-            targetPoint = cameraTransform.position + cameraTransform.forward * gunData.shootingRange;
+            targetPoint = ray.origin + ray.direction * gunData.shootingRange;
         }
 
         StartCoroutine(BulletTrailRoutine(targetPoint));

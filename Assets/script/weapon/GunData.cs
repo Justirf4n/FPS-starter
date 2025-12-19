@@ -32,4 +32,6 @@ public class GunData : ScriptableObject
     public GameObject bulletTrailPrefab;
     public float bulletSpeed = 120f;
 
+    [Header("Accuracy")]
+    public float spreadAngle = 1.5f;
 }
