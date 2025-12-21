@@ -2,50 +2,45 @@ using System.Collections;
 using UnityEngine;
 
 public class Pistol : Gun
-{   
-    private Vector3 targetPoint;
-
-    protected override void Shoot()
+{
+    protected override void OnShoot()
     {
-        Vector3 shootDirection = GetSpreadDirection();
-        Ray ray = new Ray(cameraTransform.position, shootDirection);
+        Vector3 direction = GetShootDirection();
+        Ray ray = new Ray(Camera.main.transform.position, direction);
 
         Vector3 targetPoint;
 
-        if (Physics.Raycast(ray, out RaycastHit hit, gunData.shootingRange, gunData.targetLayerMask))
+        if (Physics.Raycast(ray, out RaycastHit hit, Data.shootingRange, Data.targetLayerMask))
         {
             targetPoint = hit.point;
             SpawnHitFX(hit);
-            Debug.Log($"{gunData.gunName} hit {targetPoint}");
         }
         else
         {
-            targetPoint = ray.origin + ray.direction * gunData.shootingRange;
+            targetPoint = ray.origin + ray.direction * Data.shootingRange;
         }
 
         StartCoroutine(BulletTrailRoutine(targetPoint));
     }
 
-    protected IEnumerator BulletTrailRoutine(Vector3 target)
+    private IEnumerator BulletTrailRoutine(Vector3 target)
     {
-        GameObject bulletTrail = Instantiate(
-            gunData.bulletTrailPrefab,
-            gunMuzzle.position,
+        GameObject trail = Instantiate(
+            Data.bulletTrailPrefab,
+            Muzzle.position,
             Quaternion.identity
         );
-    
-        while (Vector3.Distance(bulletTrail.transform.position, target) > 0.05f)
+
+        while (Vector3.Distance(trail.transform.position, target) > 0.05f)
         {
-            bulletTrail.transform.position =
-                Vector3.MoveTowards(
-                    bulletTrail.transform.position,
-                    target,
-                    gunData.bulletSpeed * Time.deltaTime
-                );
-    
+            trail.transform.position = Vector3.MoveTowards(
+                trail.transform.position,
+                target,
+                Data.bulletSpeed * Time.deltaTime
+            );
             yield return null;
         }
-    
-        Destroy(bulletTrail);
+
+        Destroy(trail);
     }
 }

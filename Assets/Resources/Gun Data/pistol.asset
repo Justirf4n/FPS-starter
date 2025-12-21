@@ -26,3 +26,4 @@ MonoBehaviour:
   recoilReturnSpeed: 15
   bulletTrailPrefab: {fileID: 5129236033588632981, guid: e0da09fd8f231f7368814da925e04d54, type: 3}
   bulletSpeed: 100
+  spreadAngle: 1.5

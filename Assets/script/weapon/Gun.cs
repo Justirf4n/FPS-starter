@@ -3,31 +3,47 @@ using UnityEngine;
 
 public abstract class Gun : MonoBehaviour
 {
-    [Header("Hit Effects")]
-    [SerializeField] protected GameObject bulletHolePrefab;
-    [SerializeField] protected GameObject bulletHitParticlePrefab;
-
     [Header("References")]
-    [SerializeField] protected GunData gunData;
+    [SerializeField] private GunData gunData;
+    [SerializeField] private Transform gunMuzzle;
 
-    [SerializeField] protected Transform gunMuzzle;
+    [Header("Hit Effects")]
+    [SerializeField] private GameObject bulletHolePrefab;
+    [SerializeField] private GameObject bulletHitParticlePrefab;
 
-    protected PlayerController playerController;
-    protected Transform cameraTransform;
+    [Header("Muzzle Flash")]
+    [SerializeField] private ParticleSystem muzzleFlash;
+    [SerializeField] private float muzzleFlashDuration = 0.05f;
 
-    protected int currentAmmo;
-    protected float nextTimeToFire;
-    protected bool isReloading;
+    private PlayerController playerController;
+    private Transform cameraTransform;
 
-    protected virtual void Start()
+    private int currentAmmo;
+    private float nextTimeToFire;
+    private bool isReloading;
+
+    #region Unity Lifecycle
+    private void Start()
     {
         currentAmmo = gunData.magazineSize;
 
         playerController = GetComponentInParent<PlayerController>();
         cameraTransform = playerController.virtualCamera.transform;
+
+        if (muzzleFlash != null)
+        {
+            muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
     }
 
-    protected virtual void Update()
+    private void Update()
+    {
+        HandleInput();
+    }
+    #endregion
+
+    #region Input & Flow Control
+    private void HandleInput()
     {
         if (Input.GetButtonDown("Fire1"))
             TryShoot();
@@ -36,19 +52,10 @@ public abstract class Gun : MonoBehaviour
             TryReload();
     }
 
-    protected Vector3 GetSpreadDirection()
+    private void TryShoot()
     {
-        float spreadX = Random.Range(-gunData.spreadAngle, gunData.spreadAngle);
-        float spreadY = Random.Range(-gunData.spreadAngle, gunData.spreadAngle);
-
-        Quaternion spreadRotation = Quaternion.Euler(spreadX, spreadY, 0f);
-
-        return spreadRotation * cameraTransform.forward;
-    }
-
-    protected void TryShoot()
-    {
-        if (isReloading || Time.time < nextTimeToFire) return;
+        if (isReloading || Time.time < nextTimeToFire)
+            return;
 
         if (currentAmmo <= 0)
         {
@@ -60,44 +67,77 @@ public abstract class Gun : MonoBehaviour
         currentAmmo--;
 
         playerController.ApplyRecoil(gunData);
-        Shoot();
+        PlayMuzzleFlash();
+
+        OnShoot();
 
         Debug.Log($"{gunData.gunName} fired | Ammo: {currentAmmo}");
     }
 
-    protected void TryReload()
+    private void TryReload()
     {
-        if (isReloading || currentAmmo == gunData.magazineSize) return;
+        if (isReloading || currentAmmo == gunData.magazineSize)
+            return;
+
         StartCoroutine(ReloadRoutine());
     }
+    #endregion
 
-    protected IEnumerator ReloadRoutine()
+    #region Reload
+    private IEnumerator ReloadRoutine()
     {
         isReloading = true;
-        Debug.Log($"{gunData.gunName} reloading...");
-
         yield return new WaitForSeconds(gunData.reloadTime);
 
         currentAmmo = gunData.magazineSize;
         isReloading = false;
+    }
+    #endregion
 
-        Debug.Log($"{gunData.gunName} reloaded");
+    #region FX
+    private void PlayMuzzleFlash()
+    {
+        if (muzzleFlash == null) return;
+        if (!muzzleFlash.gameObject) return;
+
+        muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        muzzleFlash.Play();
+    }
+
+    private IEnumerator MuzzleFlashRoutine()
+    {
+        muzzleFlash.Play();
+        yield return new WaitForSeconds(muzzleFlashDuration);
+        muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmitting);
     }
 
     protected void SpawnHitFX(RaycastHit hit)
     {
-        Vector3 hitPosition = hit.point + hit.normal * 0.01f;
-        Quaternion hitRotation = Quaternion.LookRotation(hit.normal);
+        Vector3 pos = hit.point + hit.normal * 0.05f;
+        Quaternion rot = Quaternion.LookRotation(-hit.normal);
 
-        GameObject hole = Instantiate(bulletHolePrefab, hitPosition, hitRotation);
-        GameObject particle = Instantiate(bulletHitParticlePrefab, hitPosition, hitRotation);
-
-        hole.transform.SetParent(hit.collider.transform);
-        particle.transform.SetParent(hit.collider.transform);
+        GameObject hole = Instantiate(bulletHolePrefab, pos, rot, hit.collider.transform);
+        GameObject particle = Instantiate(bulletHitParticlePrefab, pos, rot, hit.collider.transform);
 
         Destroy(hole, 5f);
         Destroy(particle, 2f);
     }
+    #endregion
 
-    protected abstract void Shoot();
+    #region Utilities
+    protected Vector3 GetShootDirection()
+    {
+        float spreadX = Random.Range(-gunData.spreadAngle, gunData.spreadAngle);
+        float spreadY = Random.Range(-gunData.spreadAngle, gunData.spreadAngle);
+
+        return Quaternion.Euler(spreadX, spreadY, 0f) * cameraTransform.forward;
+    }
+
+    protected Transform Muzzle => gunMuzzle;
+    protected GunData Data => gunData;
+    #endregion
+
+    #region Extension Point
+    protected abstract void OnShoot();
+    #endregion
 }
