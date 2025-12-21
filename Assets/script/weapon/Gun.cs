@@ -13,7 +13,9 @@ public abstract class Gun : MonoBehaviour
 
     [Header("Muzzle Flash")]
     [SerializeField] private ParticleSystem muzzleFlash;
-    [SerializeField] private float muzzleFlashDuration = 0.05f;
+
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
 
     private PlayerController playerController;
     private Transform cameraTransform;
@@ -33,6 +35,11 @@ public abstract class Gun : MonoBehaviour
         if (muzzleFlash != null)
         {
             muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
         }
     }
 
@@ -68,7 +75,7 @@ public abstract class Gun : MonoBehaviour
 
         playerController.ApplyRecoil(gunData);
         PlayMuzzleFlash();
-
+        PlayFireSound();
         OnShoot();
 
         Debug.Log($"{gunData.gunName} fired | Ammo: {currentAmmo}");
@@ -104,13 +111,6 @@ public abstract class Gun : MonoBehaviour
         muzzleFlash.Play();
     }
 
-    private IEnumerator MuzzleFlashRoutine()
-    {
-        muzzleFlash.Play();
-        yield return new WaitForSeconds(muzzleFlashDuration);
-        muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-    }
-
     protected void SpawnHitFX(RaycastHit hit)
     {
         Vector3 pos = hit.point + hit.normal * 0.05f;
@@ -121,6 +121,14 @@ public abstract class Gun : MonoBehaviour
 
         Destroy(hole, 5f);
         Destroy(particle, 2f);
+    }
+
+    private void PlayFireSound()
+    {
+        if (audioSource == null) return;
+        if (gunData.fireSound == null) return;
+
+        audioSource.PlayOneShot(gunData.fireSound);
     }
     #endregion
 
