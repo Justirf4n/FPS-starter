@@ -104,9 +104,8 @@ public abstract class Gun : MonoBehaviour
     #region FX
     private void PlayMuzzleFlash()
     {
-        if (muzzleFlash == null) return;
-        if (!muzzleFlash.gameObject) return;
-
+        if (!muzzleFlash) return;
+    
         muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         muzzleFlash.Play();
     }
