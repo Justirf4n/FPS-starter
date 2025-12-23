@@ -1072,6 +1072,8 @@ MonoBehaviour:
   positionAmount: 0.02
   rotationAmount: 1.5
   smoothTime: 0.08
+  bobAmount: 0.02
+  bobSpeed: 6
 --- !u!1 &1444046298
 GameObject:
   m_ObjectHideFlags: 0
