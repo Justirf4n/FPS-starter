@@ -112,11 +112,23 @@ public abstract class Gun : MonoBehaviour
 
     protected void SpawnHitFX(RaycastHit hit)
     {
-        Vector3 pos = hit.point + hit.normal * 0.05f;
+        Vector3 pos = hit.point + hit.normal * 0.01f;
         Quaternion rot = Quaternion.LookRotation(-hit.normal);
 
+        // Create empty holder with neutral scale
+        GameObject holder = new GameObject("BulletHoleHolder");
+        holder.transform.position = pos;
+        holder.transform.rotation = rot;
+        holder.transform.localScale = Vector3.one;
+
+        // Parent holder to hit object (position follows, scale does not break)
+        holder.transform.SetParent(hit.collider.transform, true);
+
         GameObject hole = Instantiate(bulletHolePrefab, pos, rot, hit.collider.transform);
-        GameObject particle = Instantiate(bulletHitParticlePrefab, pos, rot, hit.collider.transform);
+        hole.transform.SetParent(holder.transform, true);
+        hole.transform.localScale = Vector3.one;
+        
+        GameObject particle = Instantiate(bulletHitParticlePrefab, pos, rot);
 
         Destroy(hole, 5f);
         Destroy(particle, 2f);

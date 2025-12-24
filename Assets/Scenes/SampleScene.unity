@@ -1069,11 +1069,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 919816c67c11be657aa230629090f629, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponAnimation
-  positionAmount: 0.02
-  rotationAmount: 1.5
-  smoothTime: 0.08
+  swayAmount: 0.02
+  swayRotation: 1.5
   bobAmount: 0.02
   bobSpeed: 6
+  recoilAmount: 0.01
+  recoilSmoothness: 12
+  smooth: 10
 --- !u!1 &1444046298
 GameObject:
   m_ObjectHideFlags: 0

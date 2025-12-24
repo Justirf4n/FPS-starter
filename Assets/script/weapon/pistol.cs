@@ -10,9 +10,10 @@ public class Pistol : Gun
 
         Vector3 targetPoint;
 
-        if (Physics.Raycast(ray, out RaycastHit hit, Data.shootingRange, Data.targetLayerMask))
+        if (Physics.Raycast(ray, out RaycastHit hit, Data.shootingRange))
         {
             targetPoint = hit.point;
+            Debug.Log("HIT: " + hit.collider.name);
             SpawnHitFX(hit);
         }
         else

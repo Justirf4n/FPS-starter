@@ -2,39 +2,105 @@ using UnityEngine;
 
 public class WeaponAnimation : MonoBehaviour
 {
-    [Header("Sway Settings")]
-    [SerializeField] private float positionAmount = 0.02f;
-    [SerializeField] private float rotationAmount = 1.5f;
-    [SerializeField] private float smoothTime = 0.08f;
+    [Header("Sway")]
+    [SerializeField] private float swayAmount = 0.02f;
+    [SerializeField] private float swayRotation = 1.5f;
 
-    [Header("Bobbing Settings")]
+    [Header("Bobbing")]
     [SerializeField] private float bobAmount = 0.02f;
     [SerializeField] private float bobSpeed = 8f;
 
-    private Vector3 initialPos;
-    private Quaternion initialRot;
+    [Header("Recoil")]
+    [SerializeField] private float recoilAmount = 0.1f;
+    [SerializeField] private float recoilSmoothness = 12f;
 
-    private Vector3 currentPosVelocity;
+    [Header("Smooth")]
+    [SerializeField] private float smooth = 10f;
 
-    private float bobTimer;
+    private Vector3 startPos;
+    private Quaternion startRot;
+
+    private Vector3 recoilOffset;
+    private float bobTime;
 
     private void Start()
     {
-        initialPos = transform.localPosition;
-        initialRot = transform.localRotation;
+        startPos = transform.localPosition;
+        startRot = transform.localRotation;
     }
 
     private void Update()
     {
-        Vector2 mouseInput = GetMouseInput();
-        Vector2 moveInput = GetMoveInput();
+        Vector2 mouse = GetMouseInput();
+        Vector2 move = GetMoveInput();
 
-        Vector3 swayOffset = CalculateSwayPosition(mouseInput);
-        Vector3 bobOffset = CalculateBobbing(moveInput);
+        Vector3 sway = CalculateSway(mouse);
+        Vector3 bob = CalculateBobbing(move);
 
-        ApplyPosition(swayOffset + bobOffset);
-        ApplyRotationSway(mouseInput);
+        recoilOffset = Vector3.Lerp(
+            recoilOffset,
+            Vector3.zero,
+            Time.deltaTime * recoilSmoothness
+        );
+
+        Vector3 finalPos = startPos + sway + bob + recoilOffset;
+        Quaternion finalRot = startRot * CalculateRotationSway(mouse);
+
+        transform.localPosition = Vector3.Lerp(
+            transform.localPosition,
+            finalPos,
+            Time.deltaTime * smooth
+        );
+
+        transform.localRotation = Quaternion.Lerp(
+            transform.localRotation,
+            finalRot,
+            Time.deltaTime * smooth
+        );
     }
+
+    // 🔫 Dipanggil saat menembak
+    public void Fire()
+    {
+        recoilOffset += Vector3.back * recoilAmount;
+    }
+
+    #region Calculations
+    private Vector3 CalculateSway(Vector2 mouse)
+    {
+        return new Vector3(
+            -mouse.x * swayAmount,
+            -mouse.y * swayAmount,
+            0f
+        );
+    }
+
+    private Quaternion CalculateRotationSway(Vector2 mouse)
+    {
+        return Quaternion.Euler(
+            mouse.y * swayRotation,
+            -mouse.x * swayRotation,
+            -mouse.x * swayRotation
+        );
+    }
+
+    private Vector3 CalculateBobbing(Vector2 move)
+    {
+        if (move.sqrMagnitude < 0.1f)
+        {
+            bobTime = 0f;
+            return Vector3.zero;
+        }
+
+        bobTime += Time.deltaTime * bobSpeed;
+
+        return new Vector3(
+            Mathf.Sin(bobTime) * bobAmount,
+            Mathf.Cos(bobTime * 2f) * bobAmount,
+            0f
+        );
+    }
+    #endregion
 
     #region Input
     private Vector2 GetMouseInput()
@@ -50,62 +116,6 @@ public class WeaponAnimation : MonoBehaviour
         return new Vector2(
             Input.GetAxis("Horizontal"),
             Input.GetAxis("Vertical")
-        );
-    }
-    #endregion
-
-    #region Position
-    private Vector3 CalculateSwayPosition(Vector2 input)
-    {
-        return new Vector3(
-            -input.x * positionAmount,
-            -input.y * positionAmount,
-            0f
-        );
-    }
-
-    private Vector3 CalculateBobbing(Vector2 moveInput)
-    {
-        if (moveInput.sqrMagnitude < 0.1f)
-        {
-            bobTimer = 0f;
-            return Vector3.zero;
-        }
-
-        bobTimer += Time.deltaTime * bobSpeed;
-
-        float bobX = Mathf.Sin(bobTimer) * bobAmount * 0.5f;
-        float bobY = Mathf.Cos(bobTimer * 2f) * bobAmount;
-
-        return new Vector3(bobX, bobY, 0f);
-    }
-
-    private void ApplyPosition(Vector3 offset)
-    {
-        Vector3 targetPos = initialPos + offset;
-
-        transform.localPosition = Vector3.SmoothDamp(
-            transform.localPosition,
-            targetPos,
-            ref currentPosVelocity,
-            smoothTime
-        );
-    }
-    #endregion
-
-    #region Rotation
-    private void ApplyRotationSway(Vector2 input)
-    {
-        Quaternion targetRot = initialRot * Quaternion.Euler(
-            input.y * rotationAmount,
-            -input.x * rotationAmount,
-            -input.x * rotationAmount
-        );
-
-        transform.localRotation = Quaternion.Slerp(
-            transform.localRotation,
-            targetRot,
-            Time.deltaTime * 10f
         );
     }
     #endregion
