@@ -10,12 +10,16 @@ public class WeaponAnimation : MonoBehaviour
     [SerializeField] private float bobAmount = 0.02f;
     [SerializeField] private float bobSpeed = 8f;
 
-    [Header("Recoil")]
+    [Header("Recoil Rotation")]
     [SerializeField] private float recoilAmount = 0.1f;
-    [SerializeField] private float recoilSmoothness = 12f;
+    [SerializeField] private float recoilSmoothness = 6f;
+    [SerializeField] private Vector3 recoilRotation = new Vector3(-8f, 2f, 2f);
+    [SerializeField] private float recoilRotationReturn = 18f;
 
     [Header("Smooth")]
     [SerializeField] private float smooth = 10f;
+
+    private Vector3 currentRecoilRotation;
 
     private Vector3 startPos;
     private Quaternion startRot;
@@ -43,8 +47,15 @@ public class WeaponAnimation : MonoBehaviour
             Time.deltaTime * recoilSmoothness
         );
 
+        currentRecoilRotation = Vector3.Lerp(
+            currentRecoilRotation,
+            Vector3.zero,
+            Time.deltaTime * recoilRotationReturn
+        );
+
         Vector3 finalPos = startPos + sway + bob + recoilOffset;
-        Quaternion finalRot = startRot * CalculateRotationSway(mouse);
+        Quaternion recoilRot = Quaternion.Euler(currentRecoilRotation);
+        Quaternion finalRot = startRot * recoilRot * CalculateRotationSway(mouse);
 
         transform.localPosition = Vector3.Lerp(
             transform.localPosition,
@@ -62,6 +73,7 @@ public class WeaponAnimation : MonoBehaviour
     public void Fire()
     {
         recoilOffset += Vector3.back * recoilAmount;
+        currentRecoilRotation += recoilRotation;
     }
 
     #region Calculations

@@ -37,10 +37,6 @@ public abstract class Gun : MonoBehaviour
         cameraTransform = playerController.virtualCamera.transform;
         weaponAnimation = GetComponentInChildren<WeaponAnimation>();
 
-        if (weaponAnimation == null)
-        {
-            Debug.LogError("WeaponAnimation NOT FOUND on this weapon!");
-        }
         if (muzzleFlash != null)
         {
             muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
