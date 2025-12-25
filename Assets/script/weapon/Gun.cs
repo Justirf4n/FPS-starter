@@ -17,6 +17,10 @@ public abstract class Gun : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioSource audioSource;
 
+    [Header("Recoil")]
+    [SerializeField] private WeaponAnimation weaponAnimation;
+
+
     private PlayerController playerController;
     private Transform cameraTransform;
 
@@ -31,7 +35,12 @@ public abstract class Gun : MonoBehaviour
 
         playerController = GetComponentInParent<PlayerController>();
         cameraTransform = playerController.virtualCamera.transform;
+        weaponAnimation = GetComponentInChildren<WeaponAnimation>();
 
+        if (weaponAnimation == null)
+        {
+            Debug.LogError("WeaponAnimation NOT FOUND on this weapon!");
+        }
         if (muzzleFlash != null)
         {
             muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -74,6 +83,7 @@ public abstract class Gun : MonoBehaviour
         currentAmmo--;
 
         playerController.ApplyRecoil(gunData);
+        weaponAnimation.Fire();
         PlayMuzzleFlash();
         PlayFireSound();
         OnShoot();
@@ -114,25 +124,30 @@ public abstract class Gun : MonoBehaviour
     {
         Vector3 pos = hit.point + hit.normal * 0.01f;
         Quaternion rot = Quaternion.LookRotation(-hit.normal);
-
-        // Create empty holder with neutral scale
+    
         GameObject holder = new GameObject("BulletHoleHolder");
         holder.transform.position = pos;
         holder.transform.rotation = rot;
         holder.transform.localScale = Vector3.one;
-
-        // Parent holder to hit object (position follows, scale does not break)
+    
         holder.transform.SetParent(hit.collider.transform, true);
-
-        GameObject hole = Instantiate(bulletHolePrefab, pos, rot, hit.collider.transform);
-        hole.transform.SetParent(holder.transform, true);
-        hole.transform.localScale = Vector3.one;
-        
-        GameObject particle = Instantiate(bulletHitParticlePrefab, pos, rot);
-
-        Destroy(hole, 5f);
+    
+        GameObject hole = Instantiate(bulletHolePrefab);
+        hole.transform.SetParent(holder.transform, false);
+        hole.transform.localPosition = Vector3.zero;
+        hole.transform.localRotation = Quaternion.identity;
+        hole.transform.localScale = Vector3.one * 0.15f;
+    
+        GameObject particle = Instantiate(
+            bulletHitParticlePrefab,
+            hit.point + hit.normal * 0.05f,
+            Quaternion.LookRotation(hit.normal)
+        );
+    
+        Destroy(holder, 5f);
         Destroy(particle, 2f);
     }
+
 
     private void PlayFireSound()
     {

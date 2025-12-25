@@ -13,7 +13,6 @@ public class Pistol : Gun
         if (Physics.Raycast(ray, out RaycastHit hit, Data.shootingRange))
         {
             targetPoint = hit.point;
-            Debug.Log("HIT: " + hit.collider.name);
             SpawnHitFX(hit);
         }
         else

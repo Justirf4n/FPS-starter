@@ -59,7 +59,6 @@ public class WeaponAnimation : MonoBehaviour
         );
     }
 
-    // 🔫 Dipanggil saat menembak
     public void Fire()
     {
         recoilOffset += Vector3.back * recoilAmount;
