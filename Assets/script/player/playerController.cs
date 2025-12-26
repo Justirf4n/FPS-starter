@@ -1,64 +1,58 @@
 using UnityEngine;
 using Cinemachine;
-using System.Security.Cryptography;
 
 public class PlayerController : MonoBehaviour
 {
     private CharacterController controller;
-    private CinemachineBasicMultiChannelPerlin noiseComponent;
+    private CinemachineBasicMultiChannelPerlin noise;
 
-    ///////////////// MOVEMENT ////////////////////
-    [Header("Movement Settings")]
+    [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float sprintSpeed = 8f;
     [SerializeField] private float gravity = 9.5f;
     [SerializeField] private float jumpHeight = 2f;
 
-    ///////////////// CAMERA BOB ////////////////////
-    [Header("Camera Bob")]
-    [SerializeField] private float bobFrequency = 2f;
-    [SerializeField] private float bobAmplitude = 2f;
-
-    ///////////////// CAMERA ////////////////////
-    [Header("Camera Settings")]
-    public CinemachineVirtualCamera virtualCamera;
+    [Header("Camera")]
+    [SerializeField] public CinemachineVirtualCamera vCam;
     [SerializeField] private float mouseSensitivity = 200f;
 
-    ///////////////// RECOIL ////////////////////
-    [Header("Recoil")]
-    private Vector2 currentRecoil;
-    private Vector2 targetRecoil;
+    [Header("Camera Bob")]
+    [SerializeField] private float bobAmplitude = 1.5f;
+    [SerializeField] private float bobFrequency = 2f;
 
-    ///////////////// FOOTSTEPS ////////////////////
-    [Header("Footstep Settings")]
-    [SerializeField] private AudioSource footstepSound;
-    [SerializeField] private LayerMask terrainLayerMask;
-    [SerializeField] private float walkStepInterval = 0.5f;
-    [SerializeField] private float sprintStepInterval = 0.35f;
+    [Header("Footsteps")]
+    [SerializeField] private AudioSource footstepSource;
+    [SerializeField] private LayerMask groundMask;
+    [SerializeField] private float walkInterval = 0.5f;
+    [SerializeField] private float sprintInterval = 0.35f;
+
 
     [Header("SFX Clips")]
     [SerializeField] private AudioClip[] groundFootsteps;
     [SerializeField] private AudioClip[] grassFootsteps;
     [SerializeField] private AudioClip[] gravelFootsteps;
 
-    ///////////////// INTERNAL STATE ////////////////////
-    private Quaternion baseCameraRotation;
+    [Header("Recoil")]
+    private Vector2 currentRecoil;
+    private Vector2 targetRecoil;
+    private GunData currentGun;
 
-    private GunData currentGunData;
     private float xRotation;
-    private float verticalVelocity;
+    private float yVelocity;
     private float nextStepTime;
 
-    private float moveInput;
-    private float turnInput;
+    private float inputX;
+    private float inputZ;
     private float mouseX;
     private float mouseY;
-    private bool isSprinting;
+    private bool sprinting;
+
+    private Quaternion baseCamRot;
 
     private void Start()
     {
         controller = GetComponent<CharacterController>();
-        noiseComponent = virtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
+        noise = vCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
         Cursor.lockState = CursorLockMode.Locked;
     }
 
@@ -66,6 +60,10 @@ public class PlayerController : MonoBehaviour
     {
         InputManagement();
         LookAround();
+    }
+
+    private void FixedUpdate()
+    {
         Movement();
         HandleFootsteps();
     }
@@ -76,16 +74,18 @@ public class PlayerController : MonoBehaviour
         HandleRecoil();
     }
 
-    ///////////////// MOVEMENT ////////////////////
+    // ================= MOVEMENT =================
     private void Movement()
     {
-        Vector3 move = new Vector3(turnInput, 0f, moveInput);
-        float speed = isSprinting ? sprintSpeed : moveSpeed;
+        Vector3 move =
+            transform.right * inputX +
+            transform.forward * inputZ;
 
-        move = transform.TransformDirection(move) * speed;
+        float speed = sprinting ? sprintSpeed : moveSpeed;
+        move *= speed;
 
         ApplyGravity();
-        move.y = verticalVelocity;
+        move.y = yVelocity;
 
         controller.Move(move * Time.deltaTime);
     }
@@ -94,94 +94,96 @@ public class PlayerController : MonoBehaviour
     {
         if (controller.isGrounded)
         {
-            if (verticalVelocity < 0f)
-                verticalVelocity = -2f;
+            if (yVelocity < 0f)
+                yVelocity = -2f;
 
             if (Input.GetButtonDown("Jump"))
-                verticalVelocity = Mathf.Sqrt(jumpHeight * 2f * gravity);
+                yVelocity = Mathf.Sqrt(jumpHeight * 2f * gravity);
         }
         else
         {
-            verticalVelocity -= gravity * Time.deltaTime;
+            yVelocity -= gravity * Time.deltaTime;
         }
     }
 
-    ///////////////// RECOIL ////////////////////
+    // ================= CAMERA LOOK =================
+    private void LookAround()
+    {
+        float lookX = mouseX * mouseSensitivity * Time.deltaTime;
+        float lookY = mouseY * mouseSensitivity * Time.deltaTime;
+
+        xRotation -= lookY;
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+
+        baseCamRot = Quaternion.Euler(xRotation, 0f, 0f);
+        vCam.transform.localRotation = baseCamRot;
+        transform.Rotate(Vector3.up * lookX);
+    }
+
+    // ================= RECOIL =================
     private void HandleRecoil()
     {
-        if (currentGunData == null ) return; 
-        
-        targetRecoil.y = Mathf.Clamp(targetRecoil.y, -6f, 6f);
+        if (currentGun == null) return;
 
         currentRecoil = Vector2.Lerp(
             currentRecoil,
             targetRecoil,
-            Time.deltaTime * currentGunData.recoilKickSpeed
+            Time.deltaTime * currentGun.recoilKickSpeed
         );
 
         targetRecoil = Vector2.Lerp(
             targetRecoil,
             Vector2.zero,
-            Time.deltaTime * currentGunData.recoilReturnSpeed
+            Time.deltaTime * currentGun.recoilReturnSpeed
         );
 
-        Quaternion recoilRotation =
+        Quaternion recoilRot =
             Quaternion.Euler(-currentRecoil.x, currentRecoil.y, 0f);
 
-        virtualCamera.transform.localRotation =
-            baseCameraRotation * recoilRotation;
-
+        vCam.transform.localRotation = baseCamRot * recoilRot;
     }
 
-    public void ApplyRecoil(GunData gunData)
+    public void ApplyRecoil(GunData gun)
     {
-        currentGunData = gunData;
+        currentGun = gun;
 
-        float vertical = Random.Range(
-            gunData.recoilKick.x * 0.8f,
-            gunData.recoilKick.x
-        );
-
-        float horizontal = Random.Range(
-            -gunData.recoilKick.y,
-            gunData.recoilKick.y
-        );
+        float vertical = Random.Range(gun.recoilKick.x * 0.8f, gun.recoilKick.x);
+        float horizontal = Random.Range(-gun.recoilKick.y, gun.recoilKick.y);
 
         targetRecoil += new Vector2(vertical, horizontal);
     }
 
-    ///////////////// CAMERA BOB ////////////////////
+    // ================= CAMERA BOB =================
     private void CameraBob()
     {
         if (!controller.isGrounded)
         {
-            ResetCameraBob();
+            ResetBob();
             return;
         }
 
-        Vector3 horizontalVelocity = controller.velocity;
-        horizontalVelocity.y = 0f;
+        Vector3 vel = controller.velocity;
+        vel.y = 0f;
 
-        float speed = horizontalVelocity.magnitude;
+        float speed = vel.magnitude;
         if (speed < 0.1f)
         {
-            ResetCameraBob();
+            ResetBob();
             return;
         }
 
-        float speed01 = Mathf.InverseLerp(0f, sprintSpeed, speed);
-
-        noiseComponent.m_AmplitudeGain = Mathf.Lerp(0.3f, bobAmplitude, speed01);
-        noiseComponent.m_FrequencyGain = Mathf.Lerp(1.5f, bobFrequency, speed01);
+        float t = Mathf.InverseLerp(0f, sprintSpeed, speed);
+        noise.m_AmplitudeGain = Mathf.Lerp(0.3f, bobAmplitude, t);
+        noise.m_FrequencyGain = Mathf.Lerp(1.5f, bobFrequency, t);
     }
 
-    private void ResetCameraBob()
+    private void ResetBob()
     {
-        noiseComponent.m_AmplitudeGain = 0f;
-        noiseComponent.m_FrequencyGain = 0f;
+        noise.m_AmplitudeGain = 0f;
+        noise.m_FrequencyGain = 0f;
     }
 
-    ///////////////// FOOTSTEPS ////////////////////
+    // ================= FOOTSTEPS =================
     private void HandleFootsteps()
     {
         if (!controller.isGrounded) return;
@@ -192,61 +194,57 @@ public class PlayerController : MonoBehaviour
         float speed = velocity.magnitude;
         if (speed < 0.2f) return;
 
-        float speed01 = Mathf.InverseLerp(0f, sprintSpeed, speed);
-        float interval = Mathf.Lerp(walkStepInterval, sprintStepInterval, speed01);
+        float interval = sprinting ? sprintInterval : walkInterval;
 
-        if (Time.time >= nextStepTime)
-        {
-            PlayFootstep();
-            nextStepTime = Time.time + interval;
-        }
+        if (Time.time < nextStepTime) return;
+
+        PlayFootstep();
+        nextStepTime = Time.time + interval;
     }
+
+    private AudioClip[] GetFootstepClips()
+    {
+        if (Physics.Raycast(
+            transform.position,
+            Vector3.down,
+            out RaycastHit hit,
+            1.5f,
+            groundMask))
+        {
+            if (hit.collider.CompareTag("Grass"))
+                return grassFootsteps;
+    
+            if (hit.collider.CompareTag("Gravel"))
+                return gravelFootsteps;
+        }
+    
+        return groundFootsteps;
+    }
+
 
     private void PlayFootstep()
     {
         AudioClip[] clips = GetFootstepClips();
         if (clips.Length == 0) return;
 
-        footstepSound.PlayOneShot(clips[Random.Range(0, clips.Length)]);
+        footstepSource.pitch = Random.Range(0.9f, 1.1f);
+        footstepSource.volume = Random.Range(0.8f, 1f);
+
+        footstepSource.PlayOneShot(
+            clips[Random.Range(0, clips.Length)]
+        );
     }
 
-    private AudioClip[] GetFootstepClips()
-    {
-        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 1.5f, terrainLayerMask))
-        {
-            return hit.collider.tag switch
-            {
-                "Grass" => grassFootsteps,
-                "Gravel" => gravelFootsteps,
-                _ => groundFootsteps
-            };
-        }
 
-        return groundFootsteps;
-    }
 
-    ///////////////// CAMERA LOOK ////////////////////
-    private void LookAround()
-    {
-        float lookX = mouseX * mouseSensitivity * Time.deltaTime;
-        float lookY = mouseY * mouseSensitivity * Time.deltaTime;
-
-        xRotation -= lookY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-
-        baseCameraRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        virtualCamera.transform.localRotation = baseCameraRotation;
-        transform.Rotate(Vector3.up * lookX);
-    }
-
-    ///////////////// INPUT ////////////////////
+    // ================= INPUT =================
     private void InputManagement()
     {
-        moveInput = Input.GetAxis("Vertical");
-        turnInput = Input.GetAxis("Horizontal");
+        inputZ = Input.GetAxis("Vertical");
+        inputX = Input.GetAxis("Horizontal");
         mouseX = Input.GetAxis("Mouse X");
         mouseY = Input.GetAxis("Mouse Y");
 
-        isSprinting = Input.GetKey(KeyCode.LeftShift) && moveInput > 0f;
+        sprinting = Input.GetKey(KeyCode.LeftShift) && inputZ > 0f;
     }
 }

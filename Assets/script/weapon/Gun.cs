@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using Cinemachine;
 
 public abstract class Gun : MonoBehaviour
 {
@@ -20,7 +21,7 @@ public abstract class Gun : MonoBehaviour
     [Header("Recoil")]
     [SerializeField] private WeaponAnimation weaponAnimation;
 
-
+    private CinemachineImpulseSource impulse;
     private PlayerController playerController;
     private Transform cameraTransform;
 
@@ -33,8 +34,9 @@ public abstract class Gun : MonoBehaviour
     {
         currentAmmo = gunData.magazineSize;
 
+        impulse = GetComponent<CinemachineImpulseSource>();
         playerController = GetComponentInParent<PlayerController>();
-        cameraTransform = playerController.virtualCamera.transform;
+        cameraTransform = playerController.vCam.transform;
         weaponAnimation = GetComponentInChildren<WeaponAnimation>();
 
         if (muzzleFlash != null)
@@ -80,6 +82,7 @@ public abstract class Gun : MonoBehaviour
 
         playerController.ApplyRecoil(gunData);
         weaponAnimation.Fire();
+        impulse.GenerateImpulse();
         PlayMuzzleFlash();
         PlayFireSound();
         OnShoot();
