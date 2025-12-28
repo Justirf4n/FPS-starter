@@ -8,10 +8,6 @@ public abstract class Gun : MonoBehaviour
     [SerializeField] private GunData gunData;
     [SerializeField] private Transform gunMuzzle;
 
-    [Header("Hit Effects")]
-    [SerializeField] private GameObject bulletHolePrefab;
-    [SerializeField] private GameObject bulletHitParticlePrefab;
-
     [Header("Muzzle Flash")]
     [SerializeField] private ParticleSystem muzzleFlash;
 
@@ -21,6 +17,7 @@ public abstract class Gun : MonoBehaviour
     [Header("Recoil")]
     [SerializeField] private WeaponAnimation weaponAnimation;
 
+    private WaitForSeconds reloadWait;
     private CinemachineImpulseSource impulse;
     private PlayerController playerController;
     private Transform cameraTransform;
@@ -34,6 +31,7 @@ public abstract class Gun : MonoBehaviour
     {
         currentAmmo = gunData.magazineSize;
 
+        reloadWait = new WaitForSeconds(gunData.reloadTime);
         impulse = GetComponent<CinemachineImpulseSource>();
         playerController = GetComponentInParent<PlayerController>();
         cameraTransform = playerController.vCam.transform;
@@ -52,6 +50,7 @@ public abstract class Gun : MonoBehaviour
 
     private void Update()
     {
+        if (isReloading) return;
         HandleInput();
     }
     #endregion
@@ -103,7 +102,7 @@ public abstract class Gun : MonoBehaviour
     private IEnumerator ReloadRoutine()
     {
         isReloading = true;
-        yield return new WaitForSeconds(gunData.reloadTime);
+        yield return reloadWait;
 
         currentAmmo = gunData.magazineSize;
         isReloading = false;
@@ -121,32 +120,23 @@ public abstract class Gun : MonoBehaviour
 
     protected void SpawnHitFX(RaycastHit hit)
     {
-        Vector3 pos = hit.point + hit.normal * 0.01f;
-        Quaternion rot = Quaternion.LookRotation(-hit.normal);
-    
-        GameObject holder = new GameObject("BulletHoleHolder");
-        holder.transform.position = pos;
-        holder.transform.rotation = rot;
-        holder.transform.localScale = Vector3.one;
-    
-        holder.transform.SetParent(hit.collider.transform, true);
-    
-        GameObject hole = Instantiate(bulletHolePrefab);
-        hole.transform.SetParent(holder.transform, false);
-        hole.transform.localPosition = Vector3.zero;
-        hole.transform.localRotation = Quaternion.identity;
-        hole.transform.localScale = Vector3.one * 0.15f;
-    
-        GameObject particle = Instantiate(
-            bulletHitParticlePrefab,
-            hit.point + hit.normal * 0.05f,
-            Quaternion.LookRotation(hit.normal)
-        );
-    
-        Destroy(holder, 5f);
-        Destroy(particle, 2f);
-    }
+        if (!hit.collider) return;
 
+        // ===== BULLET HOLE =====
+        GameObject hole = BulletImpactPool.Instance.GetHole();
+
+        hole.transform.SetParent(null);
+        hole.transform.position = hit.point + hit.normal * 0.01f;
+        hole.transform.rotation = Quaternion.LookRotation(-hit.normal);
+        hole.transform.SetParent(hit.collider.transform, true);
+
+        // ===== HIT PARTICLE =====
+        GameObject particle = BulletImpactPool.Instance.GetParticle();
+
+        particle.transform.SetParent(null);
+        particle.transform.position = hit.point + hit.normal * 0.05f;
+        particle.transform.rotation = Quaternion.LookRotation(hit.normal);
+    }
 
     private void PlayFireSound()
     {

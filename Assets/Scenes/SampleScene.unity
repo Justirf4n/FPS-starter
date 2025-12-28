@@ -1364,6 +1364,7 @@ GameObject:
   - component: {fileID: 1423871165}
   - component: {fileID: 1423871166}
   - component: {fileID: 1423871167}
+  - component: {fileID: 1423871168}
   m_Layer: 7
   m_Name: pistol
   m_TagString: Untagged
@@ -1578,6 +1579,21 @@ MonoBehaviour:
     m_DissipationDistance: 100
     m_PropagationSpeed: 343
   m_DefaultVelocity: {x: 0, y: 0.01, z: -0.05}
+--- !u!114 &1423871168
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1423871162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ecec912db7ff47afb721323745fd248, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BulletImpactPool
+  bulletHolePrefab: {fileID: 3903541990859740904, guid: f16e08441f841ae5d9be39c04a41b11d, type: 3}
+  hitParticlePrefab: {fileID: 6888654602427273042, guid: 26b2f9e94971726be8d62597e881a1f4, type: 3}
+  poolSize: 30
 --- !u!1 &1444046298
 GameObject:
   m_ObjectHideFlags: 0
