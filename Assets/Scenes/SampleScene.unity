@@ -1365,6 +1365,7 @@ GameObject:
   - component: {fileID: 1423871166}
   - component: {fileID: 1423871167}
   - component: {fileID: 1423871168}
+  - component: {fileID: 1423871169}
   m_Layer: 7
   m_Name: pistol
   m_TagString: Untagged
@@ -1403,11 +1404,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gunData: {fileID: 11400000, guid: 87f4b7c62aba1ed6992bcd1ca946c08a, type: 2}
   gunMuzzle: {fileID: 1503311972}
-  bulletHolePrefab: {fileID: 3903541990859740904, guid: f16e08441f841ae5d9be39c04a41b11d, type: 3}
-  bulletHitParticlePrefab: {fileID: 6888654602427273042, guid: 26b2f9e94971726be8d62597e881a1f4, type: 3}
   muzzleFlash: {fileID: 5887132533406300999}
   audioSource: {fileID: 1423871165}
-  weaponAnimation: {fileID: 0}
+  weaponAnimation: {fileID: 1423871166}
 --- !u!82 &1423871165
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1594,6 +1593,20 @@ MonoBehaviour:
   bulletHolePrefab: {fileID: 3903541990859740904, guid: f16e08441f841ae5d9be39c04a41b11d, type: 3}
   hitParticlePrefab: {fileID: 6888654602427273042, guid: 26b2f9e94971726be8d62597e881a1f4, type: 3}
   poolSize: 30
+--- !u!114 &1423871169
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1423871162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9fa422f2d6daa9fba97ab12a9528fb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BulletTrailPool
+  trailPrefab: {fileID: 5129236033588632981, guid: e0da09fd8f231f7368814da925e04d54, type: 3}
+  poolSize: 20
 --- !u!1 &1444046298
 GameObject:
   m_ObjectHideFlags: 0
@@ -1771,7 +1784,7 @@ MonoBehaviour:
   moveSpeed: 2.5
   sprintSpeed: 3
   gravity: 25
-  jumpHeight: 0.7
+  jumpHeight: 0.9
   vCam: {fileID: 1005371292}
   mouseSensitivity: 200
   bobAmplitude: 1.5
@@ -2565,8 +2578,8 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
-  - {fileID: 1803565654}
   - {fileID: 310177018}
+  - {fileID: 1803565654}
   - {fileID: 1615242093}
   - {fileID: 1204239554}
   - {fileID: 1647100227}

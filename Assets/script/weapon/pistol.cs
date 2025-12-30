@@ -3,33 +3,44 @@ using UnityEngine;
 
 public class Pistol : Gun
 {
+    #region Shoot
     protected override void OnShoot()
     {
-        Vector3 direction = GetShootDirection();
-        Ray ray = new Ray(Camera.main.transform.position, direction);
+        Vector3 camDir = GetShootDirection();
+        Ray camRay = new Ray(CameraTransform.position, camDir);
 
         Vector3 targetPoint;
 
-        if (Physics.Raycast(ray, out RaycastHit hit, Data.shootingRange))
+        if (Physics.Raycast(camRay, out RaycastHit hit, Data.shootingRange))
         {
             targetPoint = hit.point;
             SpawnHitFX(hit);
         }
         else
         {
-            targetPoint = ray.origin + ray.direction * Data.shootingRange;
+            targetPoint = camRay.origin + camRay.direction * Data.shootingRange;
         }
 
-        StartCoroutine(BulletTrailRoutine(targetPoint));
-    }
+        Vector3 muzzleToTargetDir = (targetPoint - Muzzle.position).normalized;
 
-    private IEnumerator BulletTrailRoutine(Vector3 target)
+        StartCoroutine(BulletTrailRoutine(targetPoint, muzzleToTargetDir));
+    }
+    #endregion
+
+    #region Bullet Trail
+    private IEnumerator BulletTrailRoutine(Vector3 target, Vector3 dir)
     {
-        GameObject trail = Instantiate(
-            Data.bulletTrailPrefab,
-            Muzzle.position,
-            Quaternion.identity
-        );
+        GameObject trail = BulletTrailPool.Instance.Get();
+        trail.transform.position = Muzzle.position;
+        trail.transform.rotation = Quaternion.LookRotation(dir);
+
+        TrailRenderer tr = trail.GetComponent<TrailRenderer>();
+        if (tr != null)
+        {
+            tr.Clear();
+            tr.time = 0f;
+            tr.time = 0.1f;
+        }
 
         while (Vector3.Distance(trail.transform.position, target) > 0.05f)
         {
@@ -40,7 +51,6 @@ public class Pistol : Gun
             );
             yield return null;
         }
-
-        Destroy(trail);
     }
+    #endregion
 }

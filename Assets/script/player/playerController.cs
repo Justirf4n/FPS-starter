@@ -3,7 +3,9 @@ using Cinemachine;
 
 public class PlayerController : MonoBehaviour
 {
+    // CharacterController handles collision-based movement without Rigidbody.
     private CharacterController controller;
+    // Cinemachine Perlin Noise is used for camera shake and camera bob.
     private CinemachineBasicMultiChannelPerlin noise;
 
     [Header("Movement")]
@@ -56,18 +58,21 @@ public class PlayerController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 
+    // Update handles input and camera rotation.
     private void Update()
     {
         InputManagement();
         LookAround();
     }
 
+    // Movement uses physics-based timing.
     private void FixedUpdate()
     {
         Movement();
         HandleFootsteps();
     }
 
+    // LateUpdate ensures camera effects happen after movement.
     private void LateUpdate()
     {
         CameraBob();
@@ -98,6 +103,7 @@ public class PlayerController : MonoBehaviour
                 yVelocity = -2f;
 
             if (Input.GetButtonDown("Jump"))
+                // This is real physics jump formula.
                 yVelocity = Mathf.Sqrt(jumpHeight * 2f * gravity);
         }
         else
@@ -234,8 +240,6 @@ public class PlayerController : MonoBehaviour
             clips[Random.Range(0, clips.Length)]
         );
     }
-
-
 
     // ================= INPUT =================
     private void InputManagement()

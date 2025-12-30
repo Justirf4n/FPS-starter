@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00d6722be1afc8bf299587a595658e09, type: 3}
   m_Name: pistol
   m_EditorClassIdentifier: 
-  gunName: 
+  gunName: G17
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 64
@@ -25,6 +25,6 @@ MonoBehaviour:
   recoilKickSpeed: 25
   recoilReturnSpeed: 15
   bulletTrailPrefab: {fileID: 5129236033588632981, guid: e0da09fd8f231f7368814da925e04d54, type: 3}
-  bulletSpeed: 120
+  bulletSpeed: 200
   fireSound: {fileID: 8300000, guid: bdf39850e34934cc9bd3ff381284dd4a, type: 3}
   spreadAngle: 1.5

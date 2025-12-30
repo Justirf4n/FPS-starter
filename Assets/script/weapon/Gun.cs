@@ -17,6 +17,8 @@ public abstract class Gun : MonoBehaviour
     [Header("Recoil")]
     [SerializeField] private WeaponAnimation weaponAnimation;
 
+    protected Transform CameraTransform => cameraTransform;
+
     private WaitForSeconds reloadWait;
     private CinemachineImpulseSource impulse;
     private PlayerController playerController;
@@ -36,6 +38,8 @@ public abstract class Gun : MonoBehaviour
         playerController = GetComponentInParent<PlayerController>();
         cameraTransform = playerController.vCam.transform;
         weaponAnimation = GetComponentInChildren<WeaponAnimation>();
+        Debug.Assert(playerController != null, "playerController not found!");
+        Debug.Assert(cameraTransform != null, "Camera Transform missing!");
 
         if (muzzleFlash != null)
         {
@@ -125,17 +129,29 @@ public abstract class Gun : MonoBehaviour
         // ===== BULLET HOLE =====
         GameObject hole = BulletImpactPool.Instance.GetHole();
 
-        hole.transform.SetParent(null);
-        hole.transform.position = hit.point + hit.normal * 0.01f;
-        hole.transform.rotation = Quaternion.LookRotation(-hit.normal);
-        hole.transform.SetParent(hit.collider.transform, true);
+        hole.SetActive(true);
 
+        Debug.Log("Hole active: " + hole.activeInHierarchy);
+
+        hole.transform.position = hit.point + hit.normal * 0.001f;
+        hole.transform.rotation = Quaternion.LookRotation(-hit.normal);
+        hole.transform.localScale = Vector3.one * 0.02f;
+        hole.transform.SetParent(hit.collider.transform, true);
+    
         // ===== HIT PARTICLE =====
         GameObject particle = BulletImpactPool.Instance.GetParticle();
-
+        particle.SetActive(true);
         particle.transform.SetParent(null);
-        particle.transform.position = hit.point + hit.normal * 0.05f;
+        particle.transform.position = hit.point + hit.normal * 0.03f;
         particle.transform.rotation = Quaternion.LookRotation(hit.normal);
+    
+        // ===== RESET & PLAY =====
+        ParticleSystem ps = particle.GetComponent<ParticleSystem>();
+        if (ps != null)
+        {
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ps.Play();
+        }
     }
 
     private void PlayFireSound()
@@ -152,6 +168,8 @@ public abstract class Gun : MonoBehaviour
     {
         float spreadX = Random.Range(-gunData.spreadAngle, gunData.spreadAngle);
         float spreadY = Random.Range(-gunData.spreadAngle, gunData.spreadAngle);
+        spreadX = 0;
+        spreadY = 0;
 
         return Quaternion.Euler(spreadX, spreadY, 0f) * cameraTransform.forward;
     }

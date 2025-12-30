@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3134284041183177546}
   - component: {fileID: 134536815586676382}
+  - component: {fileID: 2294757439509837396}
   m_Layer: 0
   m_Name: bulletTrialPrefab
   m_TagString: Untagged
@@ -80,7 +81,7 @@ TrailRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Time: 2
+  m_Time: 0.01
   m_PreviewTimeScale: 1
   m_Parameters:
     serializedVersion: 3
@@ -89,8 +90,8 @@ TrailRenderer:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
-        time: 0.5030899
-        value: 0.010681152
+        time: 0.49958038
+        value: 0.0084991455
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -137,8 +138,21 @@ TrailRenderer:
     textureScale: {x: 1, y: 1}
     shadowBias: 0.5
     generateLightingData: 0
-  m_MinVertexDistance: 0.1
+  m_MinVertexDistance: 0.15
   m_MaskInteraction: 0
   m_Autodestruct: 0
   m_Emitting: 1
   m_ApplyActiveColorSpace: 1
+--- !u!114 &2294757439509837396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5129236033588632981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70aa9b8e8eee69fcea0620604c740a1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutoDisable
+  lifeTime: 2

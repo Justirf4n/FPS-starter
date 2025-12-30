@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4859631583249217996}
   - component: {fileID: 122129160388565046}
   - component: {fileID: 4724460896822190336}
+  - component: {fileID: 4014651832399811490}
   m_Layer: 0
   m_Name: Debris
   m_TagString: Untagged
@@ -4717,6 +4718,19 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &4014651832399811490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5788365792248800112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70aa9b8e8eee69fcea0620604c740a1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutoDisable
+  lifeTime: 2
 --- !u!1 &6888654602427273042
 GameObject:
   m_ObjectHideFlags: 0
@@ -4729,6 +4743,7 @@ GameObject:
   - component: {fileID: 8212967787459190978}
   - component: {fileID: 8427693300192100384}
   - component: {fileID: 4228720063106544857}
+  - component: {fileID: 6454337921180423804}
   m_Layer: 0
   m_Name: bulletHitParticle
   m_TagString: Untagged
@@ -9477,6 +9492,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   OnlyDeactivate: 0
+--- !u!114 &6454337921180423804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6888654602427273042}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70aa9b8e8eee69fcea0620604c740a1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutoDisable
+  lifeTime: 2
 --- !u!1 &9066837495487319539
 GameObject:
   m_ObjectHideFlags: 0
@@ -9488,6 +9516,7 @@ GameObject:
   - component: {fileID: 4299688896765527381}
   - component: {fileID: 4202685667178146740}
   - component: {fileID: 1263792486131275736}
+  - component: {fileID: 3288644115281148133}
   m_Layer: 0
   m_Name: Directional Smoke
   m_TagString: Untagged
@@ -14203,3 +14232,16 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &3288644115281148133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9066837495487319539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70aa9b8e8eee69fcea0620604c740a1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutoDisable
+  lifeTime: 2
